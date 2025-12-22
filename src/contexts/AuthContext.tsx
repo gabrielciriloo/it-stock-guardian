@@ -1,27 +1,43 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '@/types/inventory';
+import { User, UserRole } from '@/types/inventory';
 
 interface AuthContextType {
   user: User | null;
+  users: User[];
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  createUser: (name: string, email: string, password: string, role: UserRole) => Promise<boolean>;
+  deleteUser: (userId: string) => void;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demonstration
-const mockUsers: (User & { password: string })[] = [
+interface StoredUser extends User {
+  password: string;
+}
+
+const defaultUsers: StoredUser[] = [
   { id: '1', name: 'Administrador', email: 'admin@hospital.com', role: 'admin', password: 'admin123' },
   { id: '2', name: 'Usuário TI', email: 'user@hospital.com', role: 'user', password: 'user123' },
 ];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<StoredUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('inventory_user');
+    const savedUsers = localStorage.getItem('inventory_users');
+    
+    if (savedUsers) {
+      setUsers(JSON.parse(savedUsers));
+    } else {
+      setUsers(defaultUsers);
+      localStorage.setItem('inventory_users', JSON.stringify(defaultUsers));
+    }
+    
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
@@ -29,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const foundUser = mockUsers.find(u => u.email === email && u.password === password);
+    const foundUser = users.find(u => u.email === email && u.password === password);
     if (foundUser) {
       const { password: _, ...userWithoutPassword } = foundUser;
       setUser(userWithoutPassword);
@@ -44,8 +60,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('inventory_user');
   };
 
+  const createUser = async (name: string, email: string, password: string, role: UserRole): Promise<boolean> => {
+    const existingUser = users.find(u => u.email === email);
+    if (existingUser) {
+      return false;
+    }
+
+    const newUser: StoredUser = {
+      id: crypto.randomUUID(),
+      name,
+      email,
+      role,
+      password,
+    };
+
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
+    localStorage.setItem('inventory_users', JSON.stringify(updatedUsers));
+    return true;
+  };
+
+  const deleteUser = (userId: string) => {
+    if (userId === user?.id) return; // Can't delete yourself
+    const updatedUsers = users.filter(u => u.id !== userId);
+    setUsers(updatedUsers);
+    localStorage.setItem('inventory_users', JSON.stringify(updatedUsers));
+  };
+
+  const publicUsers = users.map(({ password, ...u }) => u);
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, users: publicUsers, login, logout, createUser, deleteUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
