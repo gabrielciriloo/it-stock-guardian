@@ -20,7 +20,6 @@ import { Users } from 'lucide-react';
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: Package, label: 'Produtos', path: '/products' },
-  { icon: PlusCircle, label: 'Novo Produto', path: '/products/new', adminOnly: true },
   { icon: Users, label: 'Usuários', path: '/users', adminOnly: true },
 ];
 
