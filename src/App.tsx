@@ -13,6 +13,7 @@ import ProductDetail from "./pages/ProductDetail";
 import ProductNew from "./pages/ProductNew";
 import ProductEdit from "./pages/ProductEdit";
 import NotFound from "./pages/NotFound";
+import Users from "./pages/Users";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute adminOnly>
             <ProductEdit />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute adminOnly>
+            <Users />
           </ProtectedRoute>
         }
       />
