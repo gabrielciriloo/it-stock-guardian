@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useInventory } from '@/contexts/InventoryContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,6 +7,8 @@ import { StatusBadge } from '@/components/products/StatusBadge';
 import { CategoryIcon } from '@/components/products/CategoryIcon';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { categoryLabels } from '@/types/inventory';
 import {
   ArrowLeft,
@@ -20,6 +23,7 @@ import {
   ArrowRightLeft,
   Package,
   AlertCircle,
+  Minus,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -32,14 +36,27 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products, getProductMovements, deleteProduct } = useInventory();
+  const { products, getProductMovements, deleteProduct, withdrawProduct } = useInventory();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
+  const [withdrawQuantity, setWithdrawQuantity] = useState(1);
+  const [withdrawDestination, setWithdrawDestination] = useState('');
 
   const product = products.find(p => p.id === id);
   const movements = product ? getProductMovements(product.id) : [];
@@ -73,6 +90,44 @@ export default function ProductDetail() {
       description: 'O produto foi removido com sucesso.',
     });
     navigate('/products');
+  };
+
+  const handleWithdraw = () => {
+    if (!withdrawDestination.trim()) {
+      toast({
+        title: 'Destino obrigatório',
+        description: 'Informe o destino da retirada.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (withdrawQuantity <= 0 || withdrawQuantity > product.quantity) {
+      toast({
+        title: 'Quantidade inválida',
+        description: 'A quantidade deve ser maior que 0 e menor ou igual ao estoque disponível.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const success = withdrawProduct(product.id, withdrawQuantity, withdrawDestination.trim(), user?.name || 'Sistema');
+    
+    if (success) {
+      toast({
+        title: 'Retirada realizada',
+        description: `${withdrawQuantity} unidade(s) retirada(s) para ${withdrawDestination}.`,
+      });
+      setWithdrawDialogOpen(false);
+      setWithdrawQuantity(1);
+      setWithdrawDestination('');
+    } else {
+      toast({
+        title: 'Erro na retirada',
+        description: 'Não foi possível realizar a retirada.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const movementIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -243,10 +298,62 @@ export default function ProductDetail() {
           <div className="space-y-6">
             <Card className="p-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-4">Resumo</h3>
-              <div className="text-center">
+              <div className="text-center mb-4">
                 <span className="text-5xl font-bold text-primary">{product.quantity}</span>
                 <p className="text-sm text-muted-foreground mt-1">unidades em estoque</p>
               </div>
+              
+              {product.quantity > 0 && (
+                <Dialog open={withdrawDialogOpen} onOpenChange={setWithdrawDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full" variant="outline">
+                      <Minus className="w-4 h-4" />
+                      Retirar do Estoque
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Retirar do Estoque</DialogTitle>
+                      <DialogDescription>
+                        Informe a quantidade e o destino da retirada de {product.name}.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="quantity">Quantidade</Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          min={1}
+                          max={product.quantity}
+                          value={withdrawQuantity}
+                          onChange={(e) => setWithdrawQuantity(parseInt(e.target.value) || 1)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Disponível: {product.quantity} unidade(s)
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="destination">Destino</Label>
+                        <Input
+                          id="destination"
+                          placeholder="Ex: Setor de Radiologia, UTI, Recepção..."
+                          value={withdrawDestination}
+                          onChange={(e) => setWithdrawDestination(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setWithdrawDialogOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleWithdraw}>
+                        Confirmar Retirada
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </Card>
 
             <Card className="p-6">
