@@ -50,6 +50,7 @@ export function Sidebar() {
           <NavLink
             key={item.path}
             to={item.path}
+            end
             onClick={() => setMobileMenuOpen(false)}
             className={({ isActive }) =>
               cn(
