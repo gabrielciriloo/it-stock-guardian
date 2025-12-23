@@ -41,11 +41,13 @@ export interface ProductMovement {
   createdAt: Date;
 }
 
+export type UserRole = 'admin' | 'user';
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'user';
+  role: UserRole;
 }
 
 export const categoryLabels: Record<ProductCategory, string> = {
