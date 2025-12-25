@@ -74,8 +74,8 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
   const location = watch('location');
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Card className="p-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+      <Card className="p-4 sm:p-6">
         <h3 className="text-lg font-semibold mb-4">Informações Básicas</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -125,7 +125,7 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <h3 className="text-lg font-semibold mb-4">Identificação</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -149,9 +149,9 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <h3 className="text-lg font-semibold mb-4">Estoque e Localização</h3>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="quantity">Quantidade *</Label>
             <Input
@@ -178,7 +178,7 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
             {errors.location && <p className="text-sm text-destructive">{errors.location.message}</p>}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 sm:col-span-2 md:col-span-1">
             <Label>Status *</Label>
             <Select value={status} onValueChange={(v) => setValue('status', v as ProductStatus)}>
               <SelectTrigger>
@@ -195,7 +195,7 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <h3 className="text-lg font-semibold mb-4">Observações</h3>
         <Textarea
           {...register('observations')}
@@ -204,7 +204,7 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
         />
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end pb-4">
         <Button type="submit" size="lg" disabled={isLoading}>
           {isLoading ? (
             <Loader2 className="w-5 h-5 animate-spin" />

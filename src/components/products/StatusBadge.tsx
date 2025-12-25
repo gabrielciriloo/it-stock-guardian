@@ -1,8 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { ProductStatus, statusLabels } from '@/types/inventory';
+import { cn } from '@/lib/utils';
 
 interface StatusBadgeProps {
   status: ProductStatus;
+  className?: string;
 }
 
 const statusVariants: Record<ProductStatus, 'available' | 'inUse' | 'maintenance' | 'discarded'> = {
@@ -12,9 +14,9 @@ const statusVariants: Record<ProductStatus, 'available' | 'inUse' | 'maintenance
   discarded: 'discarded',
 };
 
-export function StatusBadge({ status }: StatusBadgeProps) {
+export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
-    <Badge variant={statusVariants[status]}>
+    <Badge variant={statusVariants[status]} className={cn(className)}>
       {statusLabels[status]}
     </Badge>
   );
