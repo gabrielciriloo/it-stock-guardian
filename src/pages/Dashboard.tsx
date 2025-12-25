@@ -45,22 +45,13 @@ export default function Dashboard() {
     <MainLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              Olá, {user?.name?.split(' ')[0]}! 👋
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Visão geral do estoque de TI do hospital
-            </p>
-          </div>
-          {user?.role === 'admin' && (
-            <Button asChild>
-              <Link to="/products/new">
-                Novo Produto
-              </Link>
-            </Button>
-          )}
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+            Olá, {user?.name?.split(' ')[0]}! 👋
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Visão geral do estoque de TI do hospital
+          </p>
         </div>
 
         {/* Stats Grid */}
