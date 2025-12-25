@@ -188,118 +188,12 @@ export default function ProductDetail() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Main Info */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                  <CategoryIcon category={product.category} className="w-8 h-8 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-4">
-                    <StatusBadge status={product.status} />
-                    <span className="text-sm text-muted-foreground">
-                      {categoryLabels[product.category]}
-                    </span>
-                  </div>
-                  
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Hash className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Código:</span>
-                      <span className="font-medium">{product.internalCode}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Tag className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Série:</span>
-                      <span className="font-medium">{product.serialNumber || '-'}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Local:</span>
-                      <span className="font-medium">{product.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Package className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Quantidade:</span>
-                      <span className="font-medium text-primary text-lg">{product.quantity}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {product.observations && (
-                <div className="mt-6 pt-6 border-t border-border">
-                  <h3 className="text-sm font-medium text-foreground mb-2">Observações</h3>
-                  <p className="text-sm text-muted-foreground">{product.observations}</p>
-                </div>
-              )}
-
-              <div className="mt-6 pt-6 border-t border-border flex flex-wrap gap-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Criado em: {product.createdAt.toLocaleDateString('pt-BR')}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  Atualizado em: {product.updatedAt.toLocaleDateString('pt-BR')}
-                </div>
-              </div>
-            </Card>
-
-            {/* History */}
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <History className="w-5 h-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold text-card-foreground">Histórico de Movimentações</h2>
-              </div>
-
-              {movements.length > 0 ? (
-                <div className="space-y-4">
-                  {movements.map(movement => {
-                    const Icon = movementIcons[movement.type] || AlertCircle;
-                    return (
-                      <div key={movement.id} className="flex gap-3 pb-4 border-b border-border last:border-0 last:pb-0">
-                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-0.5">
-                          <Icon className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-card-foreground">{movement.description}</p>
-                          {movement.fromLocation && movement.toLocation && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {movement.fromLocation} → {movement.toLocation}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                            <span>{movement.createdAt.toLocaleDateString('pt-BR', { 
-                              day: '2-digit', 
-                              month: '2-digit', 
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}</span>
-                            <span>•</span>
-                            <span>{movement.performedBy}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Nenhuma movimentação registrada
-                </p>
-              )}
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <Card className="p-6">
+          {/* Sidebar - moves to top on mobile */}
+          <div className="space-y-4 lg:order-2">
+            <Card className="p-4 sm:p-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-4">Resumo</h3>
               <div className="text-center mb-4">
-                <span className="text-5xl font-bold text-primary">{product.quantity}</span>
+                <span className="text-4xl sm:text-5xl font-bold text-primary">{product.quantity}</span>
                 <p className="text-sm text-muted-foreground mt-1">unidades em estoque</p>
               </div>
               
@@ -311,7 +205,7 @@ export default function ProductDetail() {
                       Retirar do Estoque
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="mx-4 sm:mx-0 max-w-[calc(100vw-2rem)] sm:max-w-lg">
                     <DialogHeader>
                       <DialogTitle>Retirar do Estoque</DialogTitle>
                       <DialogDescription>
@@ -343,11 +237,11 @@ export default function ProductDetail() {
                         />
                       </div>
                     </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setWithdrawDialogOpen(false)}>
+                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                      <Button variant="outline" onClick={() => setWithdrawDialogOpen(false)} className="w-full sm:w-auto">
                         Cancelar
                       </Button>
-                      <Button onClick={handleWithdraw}>
+                      <Button onClick={handleWithdraw} className="w-full sm:w-auto">
                         Confirmar Retirada
                       </Button>
                     </DialogFooter>
@@ -356,7 +250,7 @@ export default function ProductDetail() {
               )}
             </Card>
 
-            <Card className="p-6">
+            <Card className="p-4 sm:p-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-4">Detalhes do Produto</h3>
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -376,6 +270,112 @@ export default function ProductDetail() {
                   <dd><StatusBadge status={product.status} /></dd>
                 </div>
               </dl>
+            </Card>
+          </div>
+
+          {/* Main Info */}
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:order-1">
+            <Card className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                  <CategoryIcon category={product.category} className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
+                    <StatusBadge status={product.status} />
+                    <span className="text-sm text-muted-foreground">
+                      {categoryLabels[product.category]}
+                    </span>
+                  </div>
+                  
+                  <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Hash className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <span className="text-muted-foreground">Código:</span>
+                      <span className="font-medium truncate">{product.internalCode}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Tag className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <span className="text-muted-foreground">Série:</span>
+                      <span className="font-medium truncate">{product.serialNumber || '-'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <span className="text-muted-foreground">Local:</span>
+                      <span className="font-medium truncate">{product.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <span className="text-muted-foreground">Quantidade:</span>
+                      <span className="font-medium text-primary text-lg">{product.quantity}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {product.observations && (
+                <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border">
+                  <h3 className="text-sm font-medium text-foreground mb-2">Observações</h3>
+                  <p className="text-sm text-muted-foreground">{product.observations}</p>
+                </div>
+              )}
+
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Criado em: {product.createdAt.toLocaleDateString('pt-BR')}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  Atualizado em: {product.updatedAt.toLocaleDateString('pt-BR')}
+                </div>
+              </div>
+            </Card>
+
+            {/* History */}
+            <Card className="p-4 sm:p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <History className="w-5 h-5 text-muted-foreground" />
+                <h2 className="text-base sm:text-lg font-semibold text-card-foreground">Histórico de Movimentações</h2>
+              </div>
+
+              {movements.length > 0 ? (
+                <div className="space-y-3 sm:space-y-4">
+                  {movements.map(movement => {
+                    const Icon = movementIcons[movement.type] || AlertCircle;
+                    return (
+                      <div key={movement.id} className="flex gap-3 pb-3 sm:pb-4 border-b border-border last:border-0 last:pb-0">
+                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-0.5">
+                          <Icon className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-card-foreground">{movement.description}</p>
+                          {movement.fromLocation && movement.toLocation && (
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                              {movement.fromLocation} → {movement.toLocation}
+                            </p>
+                          )}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1 text-xs text-muted-foreground">
+                            <span>{movement.createdAt.toLocaleDateString('pt-BR', { 
+                              day: '2-digit', 
+                              month: '2-digit', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span>{movement.performedBy}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-6 sm:py-8">
+                  Nenhuma movimentação registrada
+                </p>
+              )}
             </Card>
           </div>
         </div>
