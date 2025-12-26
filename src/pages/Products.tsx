@@ -3,7 +3,7 @@ import { useInventory } from '@/contexts/InventoryContext';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProductCard } from '@/components/products/ProductCard';
 import { SearchBar } from '@/components/products/SearchBar';
-import { ProductFilters } from '@/components/products/ProductFilters';
+import { ProductFilters, SortOrder } from '@/components/products/ProductFilters';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,13 +17,14 @@ export default function Products() {
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<ProductStatus | 'all'>('all');
   const [locationFilter, setLocationFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('name-asc');
 
   const locations = useMemo(() => {
     return [...new Set(products.map(p => p.location))].sort();
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter(product => {
+    let result = products.filter(product => {
       // Search filter
       if (search) {
         const searchLower = search.toLowerCase();
@@ -47,7 +48,33 @@ export default function Products() {
 
       return true;
     });
-  }, [products, search, categoryFilter, statusFilter, locationFilter]);
+
+    // Sorting
+    result.sort((a, b) => {
+      switch (sortOrder) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
+        case 'date-asc':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'date-desc':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'quantity-asc':
+          return a.quantity - b.quantity;
+        case 'quantity-desc':
+          return b.quantity - a.quantity;
+        case 'brand-asc':
+          return a.brand.localeCompare(b.brand);
+        case 'brand-desc':
+          return b.brand.localeCompare(a.brand);
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [products, search, categoryFilter, statusFilter, locationFilter, sortOrder]);
 
   const clearFilters = () => {
     setCategoryFilter('all');
@@ -86,9 +113,11 @@ export default function Products() {
           status={statusFilter}
           location={locationFilter}
           locations={locations}
+          sortOrder={sortOrder}
           onCategoryChange={setCategoryFilter}
           onStatusChange={setStatusFilter}
           onLocationChange={setLocationFilter}
+          onSortChange={setSortOrder}
           onClearFilters={clearFilters}
         />
 
