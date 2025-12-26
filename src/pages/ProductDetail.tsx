@@ -24,6 +24,7 @@ import {
   Package,
   AlertCircle,
   Minus,
+  Plus,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -50,13 +51,17 @@ import { useToast } from '@/hooks/use-toast';
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products, getProductMovements, deleteProduct, withdrawProduct } = useInventory();
+  const { products, getProductMovements, deleteProduct, withdrawProduct, addUnitsToProduct } = useInventory();
   const { user } = useAuth();
   const { toast } = useToast();
   
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [withdrawQuantity, setWithdrawQuantity] = useState(1);
   const [withdrawDestination, setWithdrawDestination] = useState('');
+  
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addQuantity, setAddQuantity] = useState(1);
+  const [addOrigin, setAddOrigin] = useState('');
 
   const product = products.find(p => p.id === id);
   const movements = product ? getProductMovements(product.id) : [];
@@ -130,6 +135,44 @@ export default function ProductDetail() {
     }
   };
 
+  const handleAddUnits = () => {
+    if (!addOrigin.trim()) {
+      toast({
+        title: 'Origem obrigatória',
+        description: 'Informe a origem dos novos equipamentos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (addQuantity <= 0) {
+      toast({
+        title: 'Quantidade inválida',
+        description: 'A quantidade deve ser maior que 0.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const success = addUnitsToProduct(product.id, addQuantity, addOrigin.trim(), user?.name || 'Sistema');
+    
+    if (success) {
+      toast({
+        title: 'Unidades adicionadas',
+        description: `${addQuantity} unidade(s) adicionada(s) ao estoque.`,
+      });
+      setAddDialogOpen(false);
+      setAddQuantity(1);
+      setAddOrigin('');
+    } else {
+      toast({
+        title: 'Erro ao adicionar',
+        description: 'Não foi possível adicionar as unidades.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const movementIcons: Record<string, React.ComponentType<{ className?: string }>> = {
     entry: Package,
     exit: Package,
@@ -197,57 +240,105 @@ export default function ProductDetail() {
                 <p className="text-sm text-muted-foreground mt-1">unidades em estoque</p>
               </div>
               
-              {product.quantity > 0 && (
-                <Dialog open={withdrawDialogOpen} onOpenChange={setWithdrawDialogOpen}>
+              <div className="flex flex-col gap-2">
+                <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="w-full" variant="outline">
-                      <Minus className="w-4 h-4" />
-                      Retirar do Estoque
+                    <Button className="w-full">
+                      <Plus className="w-4 h-4" />
+                      Adicionar ao Estoque
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="mx-4 sm:mx-0 max-w-[calc(100vw-2rem)] sm:max-w-lg">
                     <DialogHeader>
-                      <DialogTitle>Retirar do Estoque</DialogTitle>
+                      <DialogTitle>Adicionar ao Estoque</DialogTitle>
                       <DialogDescription>
-                        Informe a quantidade e o destino da retirada de {product.name}.
+                        Informe a quantidade e a origem das novas unidades de {product.name}.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        <Label htmlFor="quantity">Quantidade</Label>
+                        <Label htmlFor="addQuantity">Quantidade</Label>
                         <Input
-                          id="quantity"
+                          id="addQuantity"
                           type="number"
                           min={1}
-                          max={product.quantity}
-                          value={withdrawQuantity}
-                          onChange={(e) => setWithdrawQuantity(parseInt(e.target.value) || 1)}
+                          value={addQuantity}
+                          onChange={(e) => setAddQuantity(parseInt(e.target.value) || 1)}
                         />
-                        <p className="text-xs text-muted-foreground">
-                          Disponível: {product.quantity} unidade(s)
-                        </p>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="destination">Destino</Label>
+                        <Label htmlFor="origin">Origem</Label>
                         <Input
-                          id="destination"
-                          placeholder="Ex: Setor de Radiologia, UTI, Recepção..."
-                          value={withdrawDestination}
-                          onChange={(e) => setWithdrawDestination(e.target.value)}
+                          id="origin"
+                          placeholder="Ex: Compra, Doação, Transferência de outra unidade..."
+                          value={addOrigin}
+                          onChange={(e) => setAddOrigin(e.target.value)}
                         />
                       </div>
                     </div>
                     <DialogFooter className="flex-col sm:flex-row gap-2">
-                      <Button variant="outline" onClick={() => setWithdrawDialogOpen(false)} className="w-full sm:w-auto">
+                      <Button variant="outline" onClick={() => setAddDialogOpen(false)} className="w-full sm:w-auto">
                         Cancelar
                       </Button>
-                      <Button onClick={handleWithdraw} className="w-full sm:w-auto">
-                        Confirmar Retirada
+                      <Button onClick={handleAddUnits} className="w-full sm:w-auto">
+                        Confirmar Entrada
                       </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              )}
+
+                {product.quantity > 0 && (
+                  <Dialog open={withdrawDialogOpen} onOpenChange={setWithdrawDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full" variant="outline">
+                        <Minus className="w-4 h-4" />
+                        Retirar do Estoque
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="mx-4 sm:mx-0 max-w-[calc(100vw-2rem)] sm:max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>Retirar do Estoque</DialogTitle>
+                        <DialogDescription>
+                          Informe a quantidade e o destino da retirada de {product.name}.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="quantity">Quantidade</Label>
+                          <Input
+                            id="quantity"
+                            type="number"
+                            min={1}
+                            max={product.quantity}
+                            value={withdrawQuantity}
+                            onChange={(e) => setWithdrawQuantity(parseInt(e.target.value) || 1)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Disponível: {product.quantity} unidade(s)
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="destination">Destino</Label>
+                          <Input
+                            id="destination"
+                            placeholder="Ex: Setor de Radiologia, UTI, Recepção..."
+                            value={withdrawDestination}
+                            onChange={(e) => setWithdrawDestination(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter className="flex-col sm:flex-row gap-2">
+                        <Button variant="outline" onClick={() => setWithdrawDialogOpen(false)} className="w-full sm:w-auto">
+                          Cancelar
+                        </Button>
+                        <Button onClick={handleWithdraw} className="w-full sm:w-auto">
+                          Confirmar Retirada
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
             </Card>
 
             <Card className="p-4 sm:p-6">

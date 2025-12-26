@@ -10,6 +10,7 @@ interface InventoryContextType {
   addMovement: (movement: Omit<ProductMovement, 'id' | 'createdAt'>) => void;
   getProductMovements: (productId: string) => ProductMovement[];
   withdrawProduct: (productId: string, quantity: number, destination: string, performedBy: string) => boolean;
+  addUnitsToProduct: (productId: string, quantity: number, origin: string, performedBy: string) => boolean;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -235,6 +236,28 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
+  const addUnitsToProduct = (productId: string, quantity: number, origin: string, performedBy: string): boolean => {
+    const product = products.find(p => p.id === productId);
+    if (!product || quantity <= 0) {
+      return false;
+    }
+
+    const newQuantity = product.quantity + quantity;
+    updateProduct(productId, { quantity: newQuantity });
+
+    addMovement({
+      productId,
+      type: 'entry',
+      description: `Entrada de ${quantity} unidade(s) de ${origin}`,
+      quantity,
+      fromLocation: origin,
+      toLocation: product.location,
+      performedBy,
+    });
+
+    return true;
+  };
+
   return (
     <InventoryContext.Provider value={{
       products,
@@ -245,6 +268,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       addMovement,
       getProductMovements,
       withdrawProduct,
+      addUnitsToProduct,
     }}>
       {children}
     </InventoryContext.Provider>
