@@ -21,6 +21,8 @@ export interface Product {
   model: string;
   quantity: number;
   location: string;
+  storageAddress: string;
+  storagePosition: string;
   status: ProductStatus;
   observations: string;
   createdAt: Date;
