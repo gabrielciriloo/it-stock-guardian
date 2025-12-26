@@ -400,6 +400,20 @@ export default function ProductDetail() {
                       <span className="text-muted-foreground">Quantidade:</span>
                       <span className="font-medium text-primary text-lg">{product.quantity}</span>
                     </div>
+                    {product.storageAddress && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground">Endereço:</span>
+                        <span className="font-medium truncate">{product.storageAddress}</span>
+                      </div>
+                    )}
+                    {product.storagePosition && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Tag className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground">Posição:</span>
+                        <span className="font-medium truncate">{product.storagePosition}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

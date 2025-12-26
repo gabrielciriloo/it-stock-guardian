@@ -19,6 +19,8 @@ const productSchema = z.object({
   model: z.string().min(1, 'Modelo é obrigatório'),
   quantity: z.number().min(0, 'Quantidade deve ser positiva'),
   location: z.string().min(1, 'Localização é obrigatória'),
+  storageAddress: z.string().optional(),
+  storagePosition: z.string().optional(),
   status: z.enum(['available', 'in-use', 'maintenance', 'discarded']),
   observations: z.string().optional(),
 });
@@ -61,11 +63,15 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
       model: initialData.model,
       quantity: initialData.quantity,
       location: initialData.location,
+      storageAddress: initialData.storageAddress,
+      storagePosition: initialData.storagePosition,
       status: initialData.status,
       observations: initialData.observations,
     } : {
       status: 'available',
       quantity: 1,
+      storageAddress: '',
+      storagePosition: '',
     },
   });
 
@@ -191,6 +197,24 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
               </SelectContent>
             </Select>
             {errors.status && <p className="text-sm text-destructive">{errors.status.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="storageAddress">Endereço no Estoque</Label>
+            <Input
+              id="storageAddress"
+              {...register('storageAddress')}
+              placeholder="Ex: Corredor A, Prateleira 3"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="storagePosition">Posição</Label>
+            <Input
+              id="storagePosition"
+              {...register('storagePosition')}
+              placeholder="Ex: Gaveta 2, Caixa 5"
+            />
           </div>
         </div>
       </Card>
