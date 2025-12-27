@@ -18,8 +18,18 @@ import {
 import { categoryLabels } from '@/types/inventory';
 
 export default function Dashboard() {
-  const { products, movements } = useInventory();
+  const { products, movements, isLoading } = useInventory();
   const { user } = useAuth();
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   const stats = {
     total: products.length,
