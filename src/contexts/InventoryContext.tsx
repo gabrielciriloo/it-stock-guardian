@@ -4,6 +4,7 @@ import { Product, ProductMovement, ProductStatus } from '@/types/inventory';
 interface InventoryContextType {
   products: Product[];
   movements: ProductMovement[];
+  isLoading: boolean;
   addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
@@ -145,43 +146,55 @@ const initialMovements: ProductMovement[] = [
 ];
 
 export function InventoryProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [movements, setMovements] = useState<ProductMovement[]>([]);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [movements, setMovements] = useState<ProductMovement[]>(initialMovements);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Load data from localStorage on mount
   useEffect(() => {
     const savedProducts = localStorage.getItem('inventory_products');
     const savedMovements = localStorage.getItem('inventory_movements');
     
     if (savedProducts) {
-      setProducts(JSON.parse(savedProducts, (key, value) => {
-        if (key === 'createdAt' || key === 'updatedAt') return new Date(value);
-        return value;
-      }));
-    } else {
-      setProducts(initialProducts);
+      try {
+        setProducts(JSON.parse(savedProducts, (key, value) => {
+          if (key === 'createdAt' || key === 'updatedAt') return new Date(value);
+          return value;
+        }));
+      } catch {
+        setProducts(initialProducts);
+      }
     }
 
     if (savedMovements) {
-      setMovements(JSON.parse(savedMovements, (key, value) => {
-        if (key === 'createdAt') return new Date(value);
-        return value;
-      }));
-    } else {
-      setMovements(initialMovements);
+      try {
+        setMovements(JSON.parse(savedMovements, (key, value) => {
+          if (key === 'createdAt') return new Date(value);
+          return value;
+        }));
+      } catch {
+        setMovements(initialMovements);
+      }
     }
+
+    setIsLoading(false);
+    setIsInitialized(true);
   }, []);
 
+  // Save products to localStorage when they change (only after initialization)
   useEffect(() => {
-    if (products.length > 0) {
+    if (isInitialized && products.length > 0) {
       localStorage.setItem('inventory_products', JSON.stringify(products));
     }
-  }, [products]);
+  }, [products, isInitialized]);
 
+  // Save movements to localStorage when they change (only after initialization)
   useEffect(() => {
-    if (movements.length > 0) {
+    if (isInitialized && movements.length > 0) {
       localStorage.setItem('inventory_movements', JSON.stringify(movements));
     }
-  }, [movements]);
+  }, [movements, isInitialized]);
 
   const addProduct = (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newProduct: Product = {
@@ -274,6 +287,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     <InventoryContext.Provider value={{
       products,
       movements,
+      isLoading,
       addProduct,
       updateProduct,
       deleteProduct,

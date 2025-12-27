@@ -11,7 +11,7 @@ import { PlusCircle, Package } from 'lucide-react';
 import { ProductCategory, ProductStatus } from '@/types/inventory';
 
 export default function Products() {
-  const { products } = useInventory();
+  const { products, isLoading } = useInventory();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | 'all'>('all');
@@ -82,6 +82,17 @@ export default function Products() {
     setLocationFilter('all');
     setSearch('');
   };
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
+
 
   return (
     <MainLayout>
