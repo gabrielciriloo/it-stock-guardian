@@ -28,19 +28,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('inventory_user');
+    // Load users and current user from localStorage
     const savedUsers = localStorage.getItem('inventory_users');
+    const savedUser = localStorage.getItem('inventory_user');
     
     if (savedUsers) {
-      setUsers(JSON.parse(savedUsers));
+      try {
+        setUsers(JSON.parse(savedUsers));
+      } catch {
+        setUsers(defaultUsers);
+        localStorage.setItem('inventory_users', JSON.stringify(defaultUsers));
+      }
     } else {
       setUsers(defaultUsers);
       localStorage.setItem('inventory_users', JSON.stringify(defaultUsers));
     }
     
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch {
+        setUser(null);
+        localStorage.removeItem('inventory_user');
+      }
     }
+    
+    // Mark loading as complete
     setIsLoading(false);
   }, []);
 
