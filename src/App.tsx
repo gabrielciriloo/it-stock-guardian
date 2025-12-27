@@ -20,6 +20,7 @@ const queryClient = new QueryClient();
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { user, isLoading } = useAuth();
 
+  // Show loading spinner only during initial load
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -28,14 +29,17 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
     );
   }
 
+  // Redirect to login if not authenticated
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
+  // Redirect non-admin users trying to access admin routes
   if (adminOnly && user.role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
   }
 
+  // Render the protected content
   return <>{children}</>;
 }
 
