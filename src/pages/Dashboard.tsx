@@ -14,6 +14,8 @@ import {
   ArrowRight,
   Activity,
   TrendingUp,
+  TrendingDown,
+  MapPin,
 } from 'lucide-react';
 import { categoryLabels } from '@/types/inventory';
 
@@ -50,6 +52,36 @@ export default function Dashboard() {
     .slice(0, 5);
 
   const recentMovements = movements.slice(0, 5);
+
+  // Calculate products with most exits (saídas)
+  const productExits = movements
+    .filter(m => m.type === 'exit')
+    .reduce((acc, m) => {
+      acc[m.productId] = (acc[m.productId] || 0) + (m.quantity || 1);
+      return acc;
+    }, {} as Record<string, number>);
+
+  const topExitProducts = Object.entries(productExits)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([productId, count]) => ({
+      product: products.find(p => p.id === productId),
+      count,
+    }))
+    .filter(item => item.product);
+
+  // Calculate destinations with most deliveries
+  const destinationCounts = movements
+    .filter(m => m.type === 'exit' && m.toLocation)
+    .reduce((acc, m) => {
+      const destination = m.toLocation!;
+      acc[destination] = (acc[destination] || 0) + (m.quantity || 1);
+      return acc;
+    }, {} as Record<string, number>);
+
+  const topDestinations = Object.entries(destinationCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
 
   return (
     <MainLayout>
@@ -139,6 +171,78 @@ export default function Dashboard() {
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
+          </Card>
+        </div>
+
+        {/* Top Exits and Destinations */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Products with Most Exits */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-card-foreground">Produtos com Mais Saídas</h2>
+              <TrendingDown className="w-5 h-5 text-destructive" />
+            </div>
+            {topExitProducts.length > 0 ? (
+              <div className="space-y-3">
+                {topExitProducts.map(({ product, count }, index) => (
+                  <div
+                    key={product!.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <p className="font-medium text-sm">{product!.name}</p>
+                        <p className="text-xs text-muted-foreground">{product!.internalCode}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-destructive">{count}</p>
+                      <p className="text-xs text-muted-foreground">unidades</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Nenhuma saída registrada ainda
+              </p>
+            )}
+          </Card>
+
+          {/* Top Destinations */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-card-foreground">Destinos Mais Frequentes</h2>
+              <MapPin className="w-5 h-5 text-primary" />
+            </div>
+            {topDestinations.length > 0 ? (
+              <div className="space-y-3">
+                {topDestinations.map(([destination, count], index) => (
+                  <div
+                    key={destination}
+                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                        {index + 1}
+                      </span>
+                      <p className="font-medium text-sm">{destination}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-primary">{count}</p>
+                      <p className="text-xs text-muted-foreground">entregas</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Nenhuma entrega registrada ainda
+              </p>
+            )}
           </Card>
         </div>
 
