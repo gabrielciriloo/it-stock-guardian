@@ -283,6 +283,11 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
+  // Don't render children until loading is complete
+  if (isLoading) {
+    return null; // AuthProvider already shows loading spinner
+  }
+
   return (
     <InventoryContext.Provider value={{
       products,

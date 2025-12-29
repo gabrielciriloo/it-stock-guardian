@@ -102,6 +102,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const publicUsers = users.map(({ password, ...u }) => u);
 
+  // Don't render children until loading is complete
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   return (
     <AuthContext.Provider value={{ user, users: publicUsers, login, logout, createUser, deleteUser, isLoading }}>
       {children}
