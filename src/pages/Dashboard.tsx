@@ -241,35 +241,42 @@ export default function Dashboard() {
                 <h2 className="text-lg font-semibold text-card-foreground">Produtos com Mais Saídas</h2>
                 <TrendingDown className="w-5 h-5 text-destructive" />
               </div>
-            {topExitProducts.length > 0 ? (
               <div className="space-y-3">
-                {topExitProducts.map(({ product, count }, index) => (
-                  <div
-                    key={product!.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
-                        {index + 1}
-                      </span>
-                      <div>
-                        <p className="font-medium text-sm">{product!.name}</p>
-                        <p className="text-xs text-muted-foreground">{product!.internalCode}</p>
+                {Array.from({ length: 5 }).map((_, index) => {
+                  const item = topExitProducts[index];
+                  return (
+                    <div
+                      key={item?.product?.id || `empty-exit-${index}`}
+                      className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                          {index + 1}
+                        </span>
+                        {item ? (
+                          <div>
+                            <p className="font-medium text-sm">{item.product!.name}</p>
+                            <p className="text-xs text-muted-foreground">{item.product!.internalCode}</p>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">—</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        {item ? (
+                          <>
+                            <p className="font-semibold text-destructive">{item.count}</p>
+                            <p className="text-xs text-muted-foreground">unidades</p>
+                          </>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">0</p>
+                        )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-destructive">{count}</p>
-                      <p className="text-xs text-muted-foreground">unidades</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Nenhuma saída registrada ainda
-              </p>
-            )}
-          </Card>
+            </Card>
 
           {/* Top Destinations */}
           <Card className="p-6">
@@ -277,31 +284,38 @@ export default function Dashboard() {
               <h2 className="text-lg font-semibold text-card-foreground">Destinos Mais Frequentes</h2>
               <MapPin className="w-5 h-5 text-primary" />
             </div>
-            {topDestinations.length > 0 ? (
               <div className="space-y-3">
-                {topDestinations.map(([destination, count], index) => (
-                  <div
-                    key={destination}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
-                        {index + 1}
-                      </span>
-                      <p className="font-medium text-sm">{destination}</p>
+                {Array.from({ length: 5 }).map((_, index) => {
+                  const item = topDestinations[index];
+                  return (
+                    <div
+                      key={item?.[0] || `empty-dest-${index}`}
+                      className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                          {index + 1}
+                        </span>
+                        {item ? (
+                          <p className="font-medium text-sm">{item[0]}</p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">—</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        {item ? (
+                          <>
+                            <p className="font-semibold text-primary">{item[1]}</p>
+                            <p className="text-xs text-muted-foreground">entregas</p>
+                          </>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">0</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-primary">{count}</p>
-                      <p className="text-xs text-muted-foreground">entregas</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Nenhuma entrega registrada ainda
-              </p>
-            )}
             </Card>
           </div>
         </div>
