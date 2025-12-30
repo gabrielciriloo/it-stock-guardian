@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { useInventory } from '@/contexts/InventoryContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -16,12 +17,38 @@ import {
   TrendingUp,
   TrendingDown,
   MapPin,
+  Calendar,
 } from 'lucide-react';
 import { categoryLabels } from '@/types/inventory';
+
+type PeriodFilter = '1week' | '1month' | '3months' | 'all';
 
 export default function Dashboard() {
   const { products, movements, isLoading } = useInventory();
   const { user } = useAuth();
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('1month');
+
+  // Filter movements by period
+  const filteredMovements = useMemo(() => {
+    const now = new Date();
+    let startDate: Date;
+
+    switch (periodFilter) {
+      case '1week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '1month':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '3months':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        return movements;
+    }
+
+    return movements.filter(m => m.createdAt >= startDate);
+  }, [movements, periodFilter]);
 
   if (isLoading) {
     return (
@@ -53,35 +80,46 @@ export default function Dashboard() {
 
   const recentMovements = movements.slice(0, 5);
 
-  // Calculate products with most exits (saídas)
-  const productExits = movements
-    .filter(m => m.type === 'exit')
-    .reduce((acc, m) => {
-      acc[m.productId] = (acc[m.productId] || 0) + (m.quantity || 1);
-      return acc;
-    }, {} as Record<string, number>);
+  // Calculate products with most exits (saídas) - using filtered movements
+  const topExitProducts = useMemo(() => {
+    const productExits = filteredMovements
+      .filter(m => m.type === 'exit')
+      .reduce((acc, m) => {
+        acc[m.productId] = (acc[m.productId] || 0) + (m.quantity || 1);
+        return acc;
+      }, {} as Record<string, number>);
 
-  const topExitProducts = Object.entries(productExits)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([productId, count]) => ({
-      product: products.find(p => p.id === productId),
-      count,
-    }))
-    .filter(item => item.product);
+    return Object.entries(productExits)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([productId, count]) => ({
+        product: products.find(p => p.id === productId),
+        count,
+      }))
+      .filter(item => item.product);
+  }, [filteredMovements, products]);
 
-  // Calculate destinations with most deliveries
-  const destinationCounts = movements
-    .filter(m => m.type === 'exit' && m.toLocation)
-    .reduce((acc, m) => {
-      const destination = m.toLocation!;
-      acc[destination] = (acc[destination] || 0) + (m.quantity || 1);
-      return acc;
-    }, {} as Record<string, number>);
+  // Calculate destinations with most deliveries - using filtered movements
+  const topDestinations = useMemo(() => {
+    const destinationCounts = filteredMovements
+      .filter(m => m.type === 'exit' && m.toLocation)
+      .reduce((acc, m) => {
+        const destination = m.toLocation!;
+        acc[destination] = (acc[destination] || 0) + (m.quantity || 1);
+        return acc;
+      }, {} as Record<string, number>);
 
-  const topDestinations = Object.entries(destinationCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+    return Object.entries(destinationCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+  }, [filteredMovements]);
+
+  const periodLabels: Record<PeriodFilter, string> = {
+    '1week': '1 Semana',
+    '1month': '1 Mês',
+    '3months': '3 Meses',
+    'all': 'Todo período',
+  };
 
   return (
     <MainLayout>
@@ -175,13 +213,34 @@ export default function Dashboard() {
         </div>
 
         {/* Top Exits and Destinations */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Products with Most Exits */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-card-foreground">Produtos com Mais Saídas</h2>
-              <TrendingDown className="w-5 h-5 text-destructive" />
+        <div className="space-y-4">
+          {/* Period Filter */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="w-4 h-4" />
+              <span>Período:</span>
             </div>
+            <div className="flex gap-2 flex-wrap">
+              {(Object.keys(periodLabels) as PeriodFilter[]).map((period) => (
+                <Button
+                  key={period}
+                  variant={periodFilter === period ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setPeriodFilter(period)}
+                >
+                  {periodLabels[period]}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Products with Most Exits */}
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-card-foreground">Produtos com Mais Saídas</h2>
+                <TrendingDown className="w-5 h-5 text-destructive" />
+              </div>
             {topExitProducts.length > 0 ? (
               <div className="space-y-3">
                 {topExitProducts.map(({ product, count }, index) => (
@@ -243,7 +302,8 @@ export default function Dashboard() {
                 Nenhuma entrega registrada ainda
               </p>
             )}
-          </Card>
+            </Card>
+          </div>
         </div>
 
         {/* Recent Movements */}
