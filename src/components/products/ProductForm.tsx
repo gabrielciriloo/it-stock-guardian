@@ -13,15 +13,15 @@ import { Save, Loader2 } from 'lucide-react';
 const productSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   category: z.enum(['computer', 'monitor', 'printer', 'peripheral', 'parts', 'cables', 'toner', 'network', 'other']),
-  internalCode: z.string().min(1, 'Código interno é obrigatório'),
+  internalCode: z.string().optional(),
   serialNumber: z.string().optional(),
   brand: z.string().min(1, 'Marca é obrigatória'),
-  model: z.string().min(1, 'Modelo é obrigatório'),
+  model: z.string().optional(),
   quantity: z.number().min(0, 'Quantidade deve ser positiva'),
   alarmQuantity: z.number().min(0).nullable().optional(),
   location: z.string().min(1, 'Localização é obrigatória'),
-  storageAddress: z.string().optional(),
-  storagePosition: z.string().optional(),
+  storageAddress: z.string().min(1, 'Endereço no estoque é obrigatório'),
+  storagePosition: z.string().min(1, 'Posição é obrigatória'),
   status: z.enum(['available', 'in-use', 'maintenance', 'discarded']),
   observations: z.string().optional(),
 });
@@ -123,13 +123,12 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="model">Modelo *</Label>
+            <Label htmlFor="model">Modelo</Label>
             <Input
               id="model"
               {...register('model')}
               placeholder="Ex: OptiPlex 7090"
             />
-            {errors.model && <p className="text-sm text-destructive">{errors.model.message}</p>}
           </div>
         </div>
       </Card>
@@ -138,13 +137,12 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
         <h3 className="text-lg font-semibold mb-4">Identificação</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="internalCode">Código Interno / Patrimônio *</Label>
+            <Label htmlFor="internalCode">Código Interno / Patrimônio</Label>
             <Input
               id="internalCode"
               {...register('internalCode')}
               placeholder="Ex: TI-2024-001"
             />
-            {errors.internalCode && <p className="text-sm text-destructive">{errors.internalCode.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -219,21 +217,23 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="storageAddress">Endereço no Estoque</Label>
+            <Label htmlFor="storageAddress">Endereço no Estoque *</Label>
             <Input
               id="storageAddress"
               {...register('storageAddress')}
               placeholder="Ex: Corredor A, Prateleira 3"
             />
+            {errors.storageAddress && <p className="text-sm text-destructive">{errors.storageAddress.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="storagePosition">Posição</Label>
+            <Label htmlFor="storagePosition">Posição *</Label>
             <Input
               id="storagePosition"
               {...register('storagePosition')}
               placeholder="Ex: Gaveta 2, Caixa 5"
             />
+            {errors.storagePosition && <p className="text-sm text-destructive">{errors.storagePosition.message}</p>}
           </div>
         </div>
       </Card>
