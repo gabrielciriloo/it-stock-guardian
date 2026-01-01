@@ -18,6 +18,7 @@ const productSchema = z.object({
   brand: z.string().min(1, 'Marca é obrigatória'),
   model: z.string().min(1, 'Modelo é obrigatório'),
   quantity: z.number().min(0, 'Quantidade deve ser positiva'),
+  alarmQuantity: z.number().min(0).nullable().optional(),
   location: z.string().min(1, 'Localização é obrigatória'),
   storageAddress: z.string().optional(),
   storagePosition: z.string().optional(),
@@ -62,6 +63,7 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
       brand: initialData.brand,
       model: initialData.model,
       quantity: initialData.quantity,
+      alarmQuantity: initialData.alarmQuantity ?? null,
       location: initialData.location,
       storageAddress: initialData.storageAddress,
       storagePosition: initialData.storagePosition,
@@ -70,6 +72,7 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
     } : {
       status: 'available',
       quantity: 1,
+      alarmQuantity: null,
       storageAddress: '',
       storagePosition: '',
     },
@@ -167,6 +170,22 @@ export function ProductForm({ initialData, onSubmit, isLoading }: ProductFormPro
               {...register('quantity', { valueAsNumber: true })}
             />
             {errors.quantity && <p className="text-sm text-destructive">{errors.quantity.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="alarmQuantity">Alarme de Estoque</Label>
+            <Input
+              id="alarmQuantity"
+              type="number"
+              min={0}
+              placeholder="Ex: 5"
+              {...register('alarmQuantity', { 
+                setValueAs: (v) => v === '' || v === null ? null : Number(v)
+              })}
+            />
+            <p className="text-xs text-muted-foreground">
+              Notifica quando a quantidade atingir esse valor
+            </p>
           </div>
 
           <div className="space-y-2">

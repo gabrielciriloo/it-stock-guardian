@@ -18,8 +18,76 @@ import {
   TrendingDown,
   MapPin,
   Calendar,
+  Bell,
 } from 'lucide-react';
-import { categoryLabels } from '@/types/inventory';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { categoryLabels, Product } from '@/types/inventory';
+
+// Notification Bell Component
+function NotificationBell({ products }: { products: Product[] }) {
+  const lowStockProducts = useMemo(() => {
+    return products.filter(p => 
+      p.alarmQuantity !== null && 
+      p.alarmQuantity !== undefined && 
+      p.quantity <= p.alarmQuantity
+    );
+  }, [products]);
+
+  const hasAlerts = lowStockProducts.length > 0;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="icon" className="relative">
+          <Bell className="w-5 h-5" />
+          {hasAlerts && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs font-bold rounded-full flex items-center justify-center">
+              {lowStockProducts.length}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b">
+            <Bell className="w-4 h-4 text-muted-foreground" />
+            <h4 className="font-semibold text-sm">Alertas de Estoque</h4>
+          </div>
+          {lowStockProducts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Nenhum alerta de estoque baixo
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {lowStockProducts.map(product => (
+                <Link
+                  key={product.id}
+                  to={`/products/${product.id}`}
+                  className="flex items-center justify-between p-2 rounded-lg bg-destructive/10 hover:bg-destructive/20 transition-colors"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate">{product.name}</p>
+                    <p className="text-xs text-muted-foreground">{product.internalCode}</p>
+                  </div>
+                  <div className="text-right ml-2">
+                    <p className="font-bold text-destructive">{product.quantity}</p>
+                    <p className="text-xs text-muted-foreground">
+                      mín: {product.alarmQuantity}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 type PeriodFilter = '1week' | '1month' | '3months' | 'all';
 
@@ -125,13 +193,18 @@ export default function Dashboard() {
     <MainLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-            Olá, {user?.name?.split(' ')[0]}! 👋
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Visão geral do estoque de TI do hospital
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              Olá, {user?.name?.split(' ')[0]}! 👋
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Visão geral do estoque de TI do hospital
+            </p>
+          </div>
+          
+          {/* Notification Bell */}
+          <NotificationBell products={products} />
         </div>
 
         {/* Stats Grid */}

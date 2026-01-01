@@ -20,6 +20,7 @@ export interface Product {
   brand: string;
   model: string;
   quantity: number;
+  alarmQuantity?: number | null;
   location: string;
   storageAddress: string;
   storagePosition: string;
