@@ -19,9 +19,12 @@ export default function Products() {
   const [locationFilter, setLocationFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState<SortOrder>('name-asc');
 
-  const locations = useMemo(() => {
-    return [...new Set(products.map(p => p.location))].sort();
-  }, [products]);
+  const locations = [
+    'Estoque TI',
+    'Sala Infraestrutura',
+    'Sala Sistemas',
+    'Assistência Técnica Externa'
+  ];
 
   const filteredProducts = useMemo(() => {
     let result = products.filter(product => {
