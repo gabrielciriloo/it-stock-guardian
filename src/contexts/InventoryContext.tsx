@@ -12,8 +12,8 @@ interface InventoryContextType {
   getProductMovements: (productId: string) => ProductMovement[];
   withdrawProduct: (productId: string, quantity: number, destination: string, performedBy: string) => boolean;
   addUnitsToProduct: (productId: string, quantity: number, origin: string, performedBy: string) => boolean;
-  transferToMaintenance: (productId: string, reason: string, performedBy: string) => boolean;
-  returnFromMaintenance: (productId: string, performedBy: string) => boolean;
+  transferToMaintenance: (productId: string, quantity: number, reason: string, performedBy: string) => boolean;
+  returnFromMaintenance: (productId: string, quantity: number, performedBy: string) => boolean;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -285,20 +285,21 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
-  const transferToMaintenance = (productId: string, reason: string, performedBy: string): boolean => {
+  const transferToMaintenance = (productId: string, quantity: number, reason: string, performedBy: string): boolean => {
     const product = products.find(p => p.id === productId);
-    if (!product || product.status === 'maintenance') {
+    if (!product || quantity <= 0 || quantity > product.quantity) {
       return false;
     }
 
-    const previousStatus = product.status;
-    updateProduct(productId, { status: 'maintenance' });
+    const newQuantity = product.quantity - quantity;
+    updateProduct(productId, { quantity: newQuantity });
 
     addMovement({
       productId,
       type: 'status-change',
-      description: `Transferido para manutenção: ${reason}`,
-      previousStatus,
+      description: `${quantity} unidade(s) enviada(s) para manutenção: ${reason}`,
+      quantity,
+      previousStatus: product.status,
       newStatus: 'maintenance',
       performedBy,
     });
@@ -306,18 +307,20 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
-  const returnFromMaintenance = (productId: string, performedBy: string): boolean => {
+  const returnFromMaintenance = (productId: string, quantity: number, performedBy: string): boolean => {
     const product = products.find(p => p.id === productId);
-    if (!product || product.status !== 'maintenance') {
+    if (!product || quantity <= 0) {
       return false;
     }
 
-    updateProduct(productId, { status: 'available' });
+    const newQuantity = product.quantity + quantity;
+    updateProduct(productId, { quantity: newQuantity });
 
     addMovement({
       productId,
       type: 'status-change',
-      description: 'Retornado da manutenção - equipamento disponível',
+      description: `${quantity} unidade(s) retornada(s) da manutenção`,
+      quantity,
       previousStatus: 'maintenance',
       newStatus: 'available',
       performedBy,
