@@ -12,6 +12,8 @@ interface InventoryContextType {
   getProductMovements: (productId: string) => ProductMovement[];
   withdrawProduct: (productId: string, quantity: number, destination: string, performedBy: string) => boolean;
   addUnitsToProduct: (productId: string, quantity: number, origin: string, performedBy: string) => boolean;
+  transferToMaintenance: (productId: string, reason: string, performedBy: string) => boolean;
+  returnFromMaintenance: (productId: string, performedBy: string) => boolean;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -283,6 +285,47 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
+  const transferToMaintenance = (productId: string, reason: string, performedBy: string): boolean => {
+    const product = products.find(p => p.id === productId);
+    if (!product || product.status === 'maintenance') {
+      return false;
+    }
+
+    const previousStatus = product.status;
+    updateProduct(productId, { status: 'maintenance' });
+
+    addMovement({
+      productId,
+      type: 'status-change',
+      description: `Transferido para manutenção: ${reason}`,
+      previousStatus,
+      newStatus: 'maintenance',
+      performedBy,
+    });
+
+    return true;
+  };
+
+  const returnFromMaintenance = (productId: string, performedBy: string): boolean => {
+    const product = products.find(p => p.id === productId);
+    if (!product || product.status !== 'maintenance') {
+      return false;
+    }
+
+    updateProduct(productId, { status: 'available' });
+
+    addMovement({
+      productId,
+      type: 'status-change',
+      description: 'Retornado da manutenção - equipamento disponível',
+      previousStatus: 'maintenance',
+      newStatus: 'available',
+      performedBy,
+    });
+
+    return true;
+  };
+
   // Don't render children until loading is complete
   if (isLoading) {
     return null; // AuthProvider already shows loading spinner
@@ -300,6 +343,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       getProductMovements,
       withdrawProduct,
       addUnitsToProduct,
+      transferToMaintenance,
+      returnFromMaintenance,
     }}>
       {children}
     </InventoryContext.Provider>
