@@ -67,6 +67,10 @@ export default function ProductDetail() {
 
   const [maintenanceDialogOpen, setMaintenanceDialogOpen] = useState(false);
   const [maintenanceReason, setMaintenanceReason] = useState('');
+  const [maintenanceQuantity, setMaintenanceQuantity] = useState(1);
+
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [returnQuantity, setReturnQuantity] = useState(1);
 
   const product = products.find(p => p.id === id);
   const movements = product ? getProductMovements(product.id) : [];
@@ -188,26 +192,47 @@ export default function ProductDetail() {
       return;
     }
 
-    const success = transferToMaintenance(product.id, maintenanceReason.trim(), user?.name || 'Sistema');
+    if (maintenanceQuantity <= 0 || maintenanceQuantity > product.quantity) {
+      toast({
+        title: 'Quantidade inválida',
+        description: 'A quantidade deve ser maior que 0 e menor ou igual ao estoque disponível.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const success = transferToMaintenance(product.id, maintenanceQuantity, maintenanceReason.trim(), user?.name || 'Sistema');
     
     if (success) {
       toast({
         title: 'Transferido para manutenção',
-        description: `${product.name} foi enviado para manutenção.`,
+        description: `${maintenanceQuantity} unidade(s) de ${product.name} enviada(s) para manutenção.`,
       });
       setMaintenanceDialogOpen(false);
       setMaintenanceReason('');
+      setMaintenanceQuantity(1);
     }
   };
 
   const handleReturnFromMaintenance = () => {
-    const success = returnFromMaintenance(product.id, user?.name || 'Sistema');
+    if (returnQuantity <= 0) {
+      toast({
+        title: 'Quantidade inválida',
+        description: 'A quantidade deve ser maior que 0.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const success = returnFromMaintenance(product.id, returnQuantity, user?.name || 'Sistema');
     
     if (success) {
       toast({
         title: 'Equipamento retornado',
-        description: `${product.name} está disponível novamente.`,
+        description: `${returnQuantity} unidade(s) de ${product.name} retornada(s) ao estoque.`,
       });
+      setReturnDialogOpen(false);
+      setReturnQuantity(1);
     }
   };
 
@@ -378,7 +403,7 @@ export default function ProductDetail() {
                 )}
 
                 {/* Maintenance buttons */}
-                {product.status !== 'maintenance' && product.status !== 'discarded' && (
+                {product.quantity > 0 && product.status !== 'discarded' && (
                   <Dialog open={maintenanceDialogOpen} onOpenChange={setMaintenanceDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full text-amber-600 border-amber-300 hover:bg-amber-50 hover:text-amber-700">
@@ -390,10 +415,24 @@ export default function ProductDetail() {
                       <DialogHeader>
                         <DialogTitle>Transferir para Manutenção</DialogTitle>
                         <DialogDescription>
-                          Informe o motivo pelo qual {product.name} está sendo enviado para manutenção.
+                          Informe a quantidade e o motivo pelo qual {product.name} está sendo enviado para manutenção.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="maintenanceQuantity">Quantidade</Label>
+                          <Input
+                            id="maintenanceQuantity"
+                            type="number"
+                            min={1}
+                            max={product.quantity}
+                            value={maintenanceQuantity}
+                            onChange={(e) => setMaintenanceQuantity(parseInt(e.target.value) || 1)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Disponível: {product.quantity} unidade(s)
+                          </p>
+                        </div>
                         <div className="space-y-2">
                           <Label htmlFor="maintenanceReason">Motivo da manutenção</Label>
                           <Input
@@ -417,16 +456,46 @@ export default function ProductDetail() {
                   </Dialog>
                 )}
 
-                {product.status === 'maintenance' && (
-                  <Button 
-                    className="w-full text-green-600 border-green-300 hover:bg-green-50 hover:text-green-700" 
-                    variant="outline"
-                    onClick={handleReturnFromMaintenance}
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Retornar da Manutenção
-                  </Button>
-                )}
+                <Dialog open={returnDialogOpen} onOpenChange={setReturnDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="w-full text-green-600 border-green-300 hover:bg-green-50 hover:text-green-700" 
+                      variant="outline"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Retornar da Manutenção
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="mx-4 sm:mx-0 max-w-[calc(100vw-2rem)] sm:max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>Retornar da Manutenção</DialogTitle>
+                      <DialogDescription>
+                        Informe a quantidade de {product.name} que está retornando da manutenção.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="returnQuantity">Quantidade</Label>
+                        <Input
+                          id="returnQuantity"
+                          type="number"
+                          min={1}
+                          value={returnQuantity}
+                          onChange={(e) => setReturnQuantity(parseInt(e.target.value) || 1)}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                      <Button variant="outline" onClick={() => setReturnDialogOpen(false)} className="w-full sm:w-auto">
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleReturnFromMaintenance} className="w-full sm:w-auto">
+                        <CheckCircle className="w-4 h-4" />
+                        Confirmar
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </Card>
 
