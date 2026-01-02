@@ -25,6 +25,8 @@ import {
   AlertCircle,
   Minus,
   Plus,
+  Wrench,
+  CheckCircle,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -51,7 +53,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products, getProductMovements, deleteProduct, withdrawProduct, addUnitsToProduct } = useInventory();
+  const { products, getProductMovements, deleteProduct, withdrawProduct, addUnitsToProduct, transferToMaintenance, returnFromMaintenance } = useInventory();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -62,6 +64,9 @@ export default function ProductDetail() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [addQuantity, setAddQuantity] = useState(1);
   const [addOrigin, setAddOrigin] = useState('');
+
+  const [maintenanceDialogOpen, setMaintenanceDialogOpen] = useState(false);
+  const [maintenanceReason, setMaintenanceReason] = useState('');
 
   const product = products.find(p => p.id === id);
   const movements = product ? getProductMovements(product.id) : [];
@@ -169,6 +174,39 @@ export default function ProductDetail() {
         title: 'Erro ao adicionar',
         description: 'Não foi possível adicionar as unidades.',
         variant: 'destructive',
+      });
+    }
+  };
+
+  const handleTransferToMaintenance = () => {
+    if (!maintenanceReason.trim()) {
+      toast({
+        title: 'Motivo obrigatório',
+        description: 'Informe o motivo da manutenção.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const success = transferToMaintenance(product.id, maintenanceReason.trim(), user?.name || 'Sistema');
+    
+    if (success) {
+      toast({
+        title: 'Transferido para manutenção',
+        description: `${product.name} foi enviado para manutenção.`,
+      });
+      setMaintenanceDialogOpen(false);
+      setMaintenanceReason('');
+    }
+  };
+
+  const handleReturnFromMaintenance = () => {
+    const success = returnFromMaintenance(product.id, user?.name || 'Sistema');
+    
+    if (success) {
+      toast({
+        title: 'Equipamento retornado',
+        description: `${product.name} está disponível novamente.`,
       });
     }
   };
@@ -337,6 +375,57 @@ export default function ProductDetail() {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
+                )}
+
+                {/* Maintenance buttons */}
+                {product.status !== 'maintenance' && product.status !== 'discarded' && (
+                  <Dialog open={maintenanceDialogOpen} onOpenChange={setMaintenanceDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full text-amber-600 border-amber-300 hover:bg-amber-50 hover:text-amber-700">
+                        <Wrench className="w-4 h-4" />
+                        Enviar para Manutenção
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="mx-4 sm:mx-0 max-w-[calc(100vw-2rem)] sm:max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>Transferir para Manutenção</DialogTitle>
+                        <DialogDescription>
+                          Informe o motivo pelo qual {product.name} está sendo enviado para manutenção.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="maintenanceReason">Motivo da manutenção</Label>
+                          <Input
+                            id="maintenanceReason"
+                            placeholder="Ex: Defeito no display, impressora não liga, teclado quebrado..."
+                            value={maintenanceReason}
+                            onChange={(e) => setMaintenanceReason(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter className="flex-col sm:flex-row gap-2">
+                        <Button variant="outline" onClick={() => setMaintenanceDialogOpen(false)} className="w-full sm:w-auto">
+                          Cancelar
+                        </Button>
+                        <Button onClick={handleTransferToMaintenance} className="w-full sm:w-auto">
+                          <Wrench className="w-4 h-4" />
+                          Confirmar
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+
+                {product.status === 'maintenance' && (
+                  <Button 
+                    className="w-full text-green-600 border-green-300 hover:bg-green-50 hover:text-green-700" 
+                    variant="outline"
+                    onClick={handleReturnFromMaintenance}
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Retornar da Manutenção
+                  </Button>
                 )}
               </div>
             </Card>
